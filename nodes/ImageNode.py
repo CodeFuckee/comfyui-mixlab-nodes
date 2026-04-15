@@ -1413,24 +1413,27 @@ class LoadImages_:
     RETURN_TYPES = ("IMAGE",)
     FUNCTION = "load_image"
     def load_image(self, images):
+        try:
+            # print(images)
+            ims=[]
+            for im in images['base64']:
+                image = base64_to_image(im)
+                image=image.convert('RGB')
+                image=pil2tensor(image)
+                ims.append(image)
 
-        # print(images)
-        ims=[]
-        for im in images['base64']:
-            image = base64_to_image(im)
-            image=image.convert('RGB')
-            image=pil2tensor(image)
-            ims.append(image)
-
-        if len(ims)==0:
-            image1 = Image.new('RGB', (512, 512), color='black')
-            return (pil2tensor(image1),)
-        image1 = ims[0]
-        for image2 in ims[1:]:
-            if image1.shape[1:] != image2.shape[1:]:
-                image2 = comfy.utils.common_upscale(image2.movedim(-1, 1), image1.shape[2], image1.shape[1], "bilinear", "center").movedim(1, -1)
-            image1 = torch.cat((image1, image2), dim=0)
-        return (image1,)
+            if len(ims)==0:
+                image1 = Image.new('RGB', (512, 512), color='black')
+                return (pil2tensor(image1),)
+            image1 = ims[0]
+            for image2 in ims[1:]:
+                if image1.shape[1:] != image2.shape[1:]:
+                    image2 = comfy.utils.common_upscale(image2.movedim(-1, 1), image1.shape[2], image1.shape[1], "bilinear", "center").movedim(1, -1)
+                image1 = torch.cat((image1, image2), dim=0)
+            return (image1,)
+        except Exception as e:
+            print(str(e))
+            return (None,)
         
  
 
